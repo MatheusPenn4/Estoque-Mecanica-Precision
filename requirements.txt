@@ -1,0 +1,11 @@
+# Dependências principais
+Django==4.2.7
+django-crispy-forms==2.0
+crispy-bootstrap5==0.7
+
+# Pillow sem especificar versão para evitar problemas de compilação
+Pillow
+
+# Outras dependências
+whitenoise==6.5.0
+python-dotenv==1.0.0
