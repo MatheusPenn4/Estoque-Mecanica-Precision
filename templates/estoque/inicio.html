@@ -1,0 +1,408 @@
+{% extends 'base.html' %}
+{% load static %}
+{% load math_filters %}
+
+{% block title %}Painel de Controle - Estoque{% endblock %}
+{% block page_title %}Painel de Controle{% endblock %}
+
+{% block extra_css %}
+<style>
+    .card-dashboard {
+        transition: all 0.3s;
+        border-radius: 10px;
+    }
+    .card-dashboard:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+    }
+    .card-counter {
+        padding: 20px 10px;
+        background-color: #fff;
+        height: 100px;
+        border-radius: 10px;
+        box-shadow: 0 5px 10px rgba(0, 0, 0, 0.05);
+    }
+    .card-counter .icon-box {
+        margin: 0 auto;
+        width: 60px;
+        height: 60px;
+        border-radius: 10px;
+        background: rgba(0, 0, 0, 0.05);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .card-counter .icon-box i {
+        font-size: 30px;
+    }
+    .card-counter.primary {
+        background-color: #31305E;
+        color: #FFF;
+    }
+    .card-counter.danger {
+        background-color: #ef5350;
+        color: #FFF;
+    }
+    .card-counter.success {
+        background-color: #4B4582;
+        color: #FFF;
+    }
+    .card-counter.info {
+        background-color: #009688;
+        color: #FFF;
+    }
+    .stock-alert {
+        background-color: rgba(255, 0, 0, 0.1);
+        border-left: 4px solid #ef5350;
+    }
+    .progress {
+        height: 8px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <div class="d-flex justify-content-between align-items-center">
+        <div>
+            <h1>Dashboard de Estoque</h1>
+            <p class="text-muted">Acompanhe seus indicadores em tempo real</p>
+        </div>
+        <div>
+            <button class="btn btn-outline-primary" onclick="window.location.reload()">
+                <i class="fas fa-sync-alt"></i> Atualizar
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Cards de Estatísticas -->
+<div class="row mb-4">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card-counter primary card-dashboard">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fs-2">{{ total_produtos }}</h3>
+                    <p class="mb-0">Produtos</p>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-boxes"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card-counter danger card-dashboard">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fs-2">{{ produtos_baixo_estoque.count }}</h3>
+                    <p class="mb-0">Estoque Baixo</p>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-exclamation-triangle"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card-counter success card-dashboard">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fs-2">{{ total_categorias }}</h3>
+                    <p class="mb-0">Categorias</p>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-tags"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card-counter info card-dashboard">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h3 class="fs-2">R$ {{ valor_total|floatformat:2 }}</h3>
+                    <p class="mb-0">Valor em Estoque</p>
+                </div>
+                <div class="icon-box">
+                    <i class="fas fa-dollar-sign"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <!-- Lista de Produtos com Estoque Baixo -->
+    <div class="col-lg-6">
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-exclamation-triangle text-danger me-2"></i> Produtos com Estoque Baixo</h5>
+                <a href="{% url 'relatorio_estoque' %}?tipo_relatorio=estoque_baixo" class="btn btn-sm btn-danger">Ver Todos</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Produto</th>
+                                <th>Quantidade</th>
+                                <th>Estoque Mínimo</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in produtos_baixo_estoque|slice:":5" %}
+                            <tr class="stock-alert">
+                                <td>{{ produto.codigo_referencia }}</td>
+                                <td>
+                                    <a href="{% url 'detalhe_produto' produto.id %}">{{ produto.nome }}</a>
+                                </td>
+                                <td class="fw-bold text-danger">{{ produto.quantidade_em_estoque }}</td>
+                                <td>{{ produto.estoque_minimo }}</td>
+                                <td>
+                                    <div class="progress">
+                                        <!-- Simplificando com uma solução fixa e confiável -->
+                                        <div class="progress-bar bg-danger" role="progressbar" 
+                                             style="width: 60%;" 
+                                             aria-valuenow="{{ produto.quantidade_em_estoque }}" 
+                                             aria-valuemin="0" 
+                                             aria-valuemax="{{ produto.estoque_minimo }}">
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="5" class="text-center py-3">Não há produtos com estoque baixo.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% if produtos_baixo_estoque.count > 5 %}
+                <div class="card-footer text-center">
+                    <a href="{% url 'relatorio_estoque' %}?tipo_relatorio=estoque_baixo" class="text-danger">
+                        Ver mais {{ produtos_baixo_estoque.count|add:"-5" }} produtos com estoque baixo
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Lista de Produtos mais Valiosos em Estoque -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-chart-line me-2"></i> Produtos mais Valiosos</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Quantidade</th>
+                                <th>Preço Unit.</th>
+                                <th>Valor Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for produto in produtos_valiosos %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'detalhe_produto' produto.id %}">{{ produto.nome }}</a>
+                                </td>
+                                <td>{{ produto.quantidade_em_estoque }}</td>
+                                <td>R$ {{ produto.preco_unitario|floatformat:2 }}</td>
+                                <td class="fw-bold">R$ {{ produto.valor_total|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3">Não há produtos cadastrados.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-6">
+        <!-- Últimas Movimentações -->
+        <div class="card mb-4">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <h5 class="mb-0"><i class="fas fa-exchange-alt me-2"></i> Últimas Movimentações</h5>
+                <a href="{% url 'lista_movimentacoes' %}" class="btn btn-sm btn-primary">Ver Todas</a>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Produto</th>
+                                <th>Tipo</th>
+                                <th>Quantidade</th>
+                                <th>Data</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for movimentacao in ultimas_movimentacoes %}
+                            <tr>
+                                <td>
+                                    <a href="{% url 'detalhe_produto' movimentacao.produto.id %}">
+                                        {{ movimentacao.produto.nome }}
+                                    </a>
+                                </td>
+                                <td>
+                                    {% if movimentacao.tipo == 'entrada' %}
+                                        <span class="badge bg-success">Entrada</span>
+                                    {% else %}
+                                        <span class="badge bg-danger">Saída</span>
+                                    {% endif %}
+                                </td>
+                                <td>{{ movimentacao.quantidade }}</td>
+                                <td>{{ movimentacao.data|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="4" class="text-center py-3">Nenhuma movimentação registrada.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lista de categorias e valores -->
+        <div class="card mb-4">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-chart-pie me-2"></i> Valor por Categoria</h5>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-hover mb-0">
+                        <thead>
+                            <tr>
+                                <th>Categoria</th>
+                                <th>Produtos</th>
+                                <th>Valor Total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for categoria in categorias|slice:":5" %}
+                            <tr>
+                                <td>{{ categoria.nome }}</td>
+                                <td>{{ categoria.qtd_produtos }}</td>
+                                <td>R$ {{ categoria.valor_total|default:"0"|floatformat:2 }}</td>
+                            </tr>
+                            {% empty %}
+                            <tr>
+                                <td colspan="3" class="text-center py-3">Nenhuma categoria cadastrada.</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Ações Rápidas -->
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0"><i class="fas fa-bolt me-2"></i> Ações Rápidas</h5>
+            </div>
+            <div class="card-body">
+                <div class="row g-3">
+                    <div class="col-6">
+                        <a href="{% url 'criar_produto' %}" class="btn btn-primary w-100">
+                            <i class="fas fa-plus-circle me-2"></i> Novo Produto
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'entrada_estoque' %}" class="btn btn-success w-100">
+                            <i class="fas fa-arrow-down me-2"></i> Entrada
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'saida_estoque' %}" class="btn btn-danger w-100">
+                            <i class="fas fa-arrow-up me-2"></i> Saída
+                        </a>
+                    </div>
+                    <div class="col-6">
+                        <a href="{% url 'relatorio_estoque' %}" class="btn btn-info w-100">
+                            <i class="fas fa-file-alt me-2"></i> Relatório
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Tabela de Produtos Completa -->
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0"><i class="fas fa-boxes me-2"></i> Lista de Produtos</h5>
+        <a href="{% url 'lista_produtos' %}" class="btn btn-sm btn-primary">Ver Detalhes</a>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover mb-0">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Localização</th>
+                        <th>Quantidade</th>
+                        <th>Estoque Mín.</th>
+                        <th>Preço Unit.</th>
+                        <th>Valor Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos %}
+                    <tr {% if produto.estoque_baixo %}class="stock-alert"{% endif %}>
+                        <td>{{ produto.codigo_referencia }}</td>
+                        <td>
+                            <a href="{% url 'detalhe_produto' produto.id %}">{{ produto.nome }}</a>
+                        </td>
+                        <td>{{ produto.categoria.nome }}</td>
+                        <td>{{ produto.localizacao|default:"--" }}</td>
+                        <td class="{% if produto.estoque_baixo %}fw-bold text-danger{% endif %}">
+                            {{ produto.quantidade_em_estoque }}
+                        </td>
+                        <td>{{ produto.estoque_minimo }}</td>
+                        <td>R$ {{ produto.preco_unitario|floatformat:2 }}</td>
+                        <td>
+                            {% comment %} Correção 2: Cálculo do valor total sem usar os filtros mul {% endcomment %}
+                            R$ {{ produto.valor_total_em_estoque|floatformat:2 }}
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-3">Nenhum produto cadastrado.</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Adicionar filtros e ordenação interativa na tabela de produtos
+    document.addEventListener('DOMContentLoaded', function() {
+        // Aqui podemos adicionar JavaScript para filtrar a tabela ou outras interações
+        console.log('Dashboard carregado!');
+    });
+</script>
+{% endblock %}

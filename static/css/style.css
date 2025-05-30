@@ -1,0 +1,160 @@
+/* Arquivo CSS principal do sistema de controle de estoque */
+:root {
+    --primary-color: #31305E;
+    --secondary-color: #4B4582;
+    --accent-color: #009688;
+    --danger-color: #dc3545;
+    --warning-color: #ffc107;
+    --success-color: #28a745;
+    --light-color: #f8f9fa;
+    --dark-color: #343a40;
+    --sidebar-width: 220px;
+    --topbar-height: 60px;
+}
+
+body {
+    font-family: 'Segoe UI', sans-serif;
+    background-color: var(--light-color);
+    margin: 0;
+    padding: 0;
+}
+
+/* Layout principal */
+.sidebar {
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100vh;
+    width: var(--sidebar-width);
+    background-color: var(--primary-color);
+    color: white;
+    padding-top: var(--topbar-height);
+    z-index: 100;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+.sidebar-header {
+    padding: 20px;
+    text-align: center;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    margin-bottom: 20px;
+}
+
+.sidebar-menu {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.sidebar-menu li {
+    margin-bottom: 5px;
+}
+
+.sidebar-menu a {
+    display: block;
+    padding: 15px 20px;
+    color: rgba(255, 255, 255, 0.8);
+    text-decoration: none;
+    transition: all 0.3s;
+}
+
+.sidebar-menu a:hover, .sidebar-menu a.active {
+    background-color: var(--secondary-color);
+    color: white;
+}
+
+.sidebar-menu i {
+    margin-right: 10px;
+    width: 20px;
+    text-align: center;
+}
+
+.topbar {
+    position: fixed;
+    top: 0;
+    left: var(--sidebar-width);
+    right: 0;
+    height: var(--topbar-height);
+    background-color: white;
+    border-bottom: 1px solid #eaeaea;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 20px;
+    z-index: 50;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+}
+
+.content-wrapper {
+    margin-left: var(--sidebar-width);
+    margin-top: var(--topbar-height);
+    padding: 20px;
+    min-height: calc(100vh - var(--topbar-height));
+}
+
+/* Cards e elementos da UI */
+.card {
+    border-radius: 10px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border: none;
+    margin-bottom: 20px;
+}
+
+.card-header {
+    background-color: #fff;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+    font-weight: bold;
+}
+
+.btn-primary {
+    background-color: var(--primary-color);
+    border-color: var(--primary-color);
+}
+
+.btn-primary:hover {
+    background-color: var(--secondary-color);
+    border-color: var(--secondary-color);
+}
+
+.btn-success {
+    background-color: var(--accent-color);
+    border-color: var(--accent-color);
+}
+
+/* Alertas e notificações */
+.alert {
+    border-radius: 10px;
+}
+
+/* Tabelas */
+.table th {
+    background-color: #f5f5f5;
+}
+
+.table-hover tbody tr:hover {
+    background-color: rgba(0, 0, 0, 0.03);
+}
+
+/* Responsividade para dispositivos móveis */
+@media (max-width: 768px) {
+    .sidebar {
+        width: 0;
+        padding-top: 0;
+        transition: width 0.3s;
+    }
+    
+    .content-wrapper,
+    .topbar {
+        margin-left: 0;
+        transition: margin-left 0.3s;
+    }
+    
+    .sidebar.active {
+        width: var(--sidebar-width);
+    }
+    
+    .content-wrapper.active,
+    .topbar.active {
+        margin-left: var(--sidebar-width);
+    }
+}

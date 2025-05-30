@@ -1,0 +1,134 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}Relatórios - Controle de Estoque{% endblock %}
+{% block page_title %}Relatórios de Estoque{% endblock %}
+
+{% block content %}
+<div class="content-header">
+    <h1>Relatórios de Estoque</h1>
+    <p class="text-muted">Gere relatórios personalizados</p>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">Filtros do Relatório</h5>
+    </div>
+    <div class="card-body">
+        <form method="get">
+            {% crispy form %}
+        </form>
+    </div>
+</div>
+
+{% if produtos %}
+<div class="card mt-4">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Resultados</h5>
+        <button onclick="window.print()" class="btn btn-sm btn-secondary">
+            <i class="fas fa-print me-2"></i>Imprimir
+        </button>
+        <a href="?{{ request.GET.urlencode }}&exportar_csv=true" class="btn btn-sm btn-success">
+            <i class="fas fa-file-csv me-2"></i>Exportar CSV
+        </a>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Preço Unitário</th>
+                        <th>Quantidade</th>
+                        <th>Valor Total</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos %}
+                    <tr>
+                        <td>{{ produto.id }}</td>
+                        <td>{{ produto.nome }}</td>
+                        <td>{{ produto.categoria.nome }}</td>
+                        <td>R$ {{ produto.preco_unitario|floatformat:2 }}</td>
+                        <td>{{ produto.quantidade_em_estoque }}</td>
+                        <td>R$ {{ produto.valor_total_em_estoque|floatformat:2 }}</td>
+                        <td>
+                            {% if produto.estoque_baixo %}
+                                <span class="badge bg-danger">Estoque Baixo</span>
+                            {% else %}
+                                <span class="badge bg-success">OK</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                <tfoot>
+                    <tr class="table-dark">
+                        <td colspan="4" class="text-end"><strong>Total:</strong></td>
+                        <td><strong>{{ produtos.count }} produtos</strong></td>
+                        <td>
+                            <strong>
+                                R$ 
+                                {% with total_valor=0 %}
+                                    {% for produto in produtos %}
+                                        {% with valor_produto=produto.valor_total_em_estoque %}
+                                            {% with total_valor=total_valor|add:valor_produto %}
+                                            {% endwith %}
+                                        {% endwith %}
+                                    {% endfor %}
+                                    {{ total_valor|floatformat:2 }}
+                                {% endwith %}
+                            </strong>
+                        </td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    </div>
+</div>
+{% elif form.is_bound %}
+<div class="alert alert-info mt-4">
+    <i class="fas fa-info-circle me-2"></i>
+    Nenhum produto encontrado com os filtros selecionados.
+</div>
+{% endif %}
+
+{% endblock %}
+
+{% block extra_css %}
+<style>
+    @media print {
+        .sidebar, .topbar, .card-header, form, .btn, footer {
+            display: none !important;
+        }
+        
+        .content-wrapper {
+            margin-left: 0 !important;
+            margin-top: 0 !important;
+        }
+        
+        .card {
+            box-shadow: none !important;
+            border: 1px solid #ddd !important;
+        }
+        
+        body {
+            font-size: 12pt;
+        }
+        
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+        }
+    }
+</style>
+{% endblock %}

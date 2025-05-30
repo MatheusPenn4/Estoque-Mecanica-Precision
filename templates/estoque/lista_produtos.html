@@ -1,0 +1,145 @@
+{% extends 'base.html' %}
+
+{% block title %}Produtos - Controle de Estoque{% endblock %}
+{% block page_title %}Produtos{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stock-alert {
+        background-color: rgba(255, 0, 0, 0.1);
+        border-left: 4px solid #ef5350;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1>Produtos</h1>
+    <div>
+        <a href="{% url 'criar_produto' %}" class="btn btn-success">
+            <i class="fas fa-plus"></i> Novo Produto
+        </a>
+        <a href="{% url 'lista_produtos' %}?estoque_baixo=sim" class="btn btn-danger">
+            <i class="fas fa-exclamation-triangle"></i> Estoque Baixo
+        </a>
+    </div>
+</div>
+
+<div class="card mb-4">
+    <div class="card-header">
+        <h5 class="mb-0">Filtros</h5>
+    </div>
+    <div class="card-body">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <label for="busca" class="form-label">Busca</label>
+                <input type="text" class="form-control" id="busca" name="busca" 
+                       placeholder="Nome, código ou localização..." value="{{ busca|default:'' }}">
+            </div>
+            <div class="col-md-4">
+                <label for="categoria" class="form-label">Categoria</label>
+                <select class="form-select" id="categoria" name="categoria">
+                    <option value="">Todas as categorias</option>
+                    {% for cat in categorias %}
+                    <option value="{{ cat.id }}" {% if categoria_id == cat.id %}selected{% endif %}>{{ cat.nome }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4 d-flex align-items-end">
+                <button type="submit" class="btn btn-primary me-2">Filtrar</button>
+                <a href="{% url 'lista_produtos' %}" class="btn btn-secondary">Limpar</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Lista de Produtos</h5>
+        <span class="badge bg-primary">{{ produtos.count }} produto(s)</span>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Nome</th>
+                        <th>Categoria</th>
+                        <th>Localização</th>
+                        <th>Quantidade</th>
+                        <th>Estoque Mín.</th>
+                        <th>Preço Unit.</th>
+                        <th>Ações</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for produto in produtos %}
+                    <tr {% if produto.estoque_baixo %}class="stock-alert"{% endif %}>
+                        <td>{{ produto.codigo_referencia }}</td>
+                        <td>{{ produto.nome }}</td>
+                        <td>{{ produto.categoria.nome }}</td>
+                        <td>{{ produto.localizacao|default:"--" }}</td>
+                        <td class="{% if produto.estoque_baixo %}text-danger fw-bold{% endif %}">
+                            {{ produto.quantidade_em_estoque }}
+                            {% if produto.estoque_baixo %}
+                            <i class="fas fa-exclamation-triangle text-danger" data-bs-toggle="tooltip" 
+                               title="Estoque abaixo do mínimo ({{ produto.estoque_minimo }})"></i>
+                            {% endif %}
+                        </td>
+                        <td>{{ produto.estoque_minimo }}</td>
+                        <td>R$ {{ produto.preco_unitario|floatformat:2 }}</td>
+                        <td>
+                            <a href="{% url 'detalhe_produto' produto.id %}" class="btn btn-sm btn-info" title="Visualizar">
+                                <i class="fas fa-eye"></i>
+                            </a>
+                            <a href="{% url 'editar_produto' produto.id %}" class="btn btn-sm btn-primary" title="Editar">
+                                <i class="fas fa-edit"></i>
+                            </a>
+                            <a href="{% url 'excluir_produto' produto.id %}" class="btn btn-sm btn-danger" title="Excluir">
+                                <i class="fas fa-trash"></i>
+                            </a>
+                            <div class="btn-group">
+                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                    <i class="fas fa-cog"></i>
+                                </button>
+                                <ul class="dropdown-menu">
+                                    <li>
+                                        <a href="{% url 'entrada_estoque' %}?produto_id={{ produto.id }}" class="dropdown-item">
+                                            <i class="fas fa-arrow-down text-success"></i> Registrar Entrada
+                                        </a>
+                                    </li>
+                                    <li>
+                                        <a href="{% url 'saida_estoque' %}?produto_id={{ produto.id }}" class="dropdown-item">
+                                            <i class="fas fa-arrow-up text-danger"></i> Registrar Saída
+                                        </a>
+                                    </li>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="8" class="text-center py-4">
+                            <i class="fas fa-box-open fa-3x text-muted mb-3"></i>
+                            <p>Nenhum produto cadastrado.</p>
+                            <a href="{% url 'criar_produto' %}" class="btn btn-primary">Adicionar Produto</a>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Inicializa tooltips
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.map(function (tooltipTriggerEl) {
+        return new bootstrap.Tooltip(tooltipTriggerEl);
+    });
+</script>
+{% endblock %}

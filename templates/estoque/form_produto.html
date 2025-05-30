@@ -1,0 +1,71 @@
+{% extends 'base.html' %}
+{% load crispy_forms_tags %}
+
+{% block title %}{{ titulo }} - Controle de Estoque{% endblock %}
+{% block page_title %}{{ titulo }}{% endblock %}
+
+{% block content %}
+<div class="card">
+    <div class="card-header">
+        <h5 class="mb-0">{{ titulo }}</h5>
+    </div>
+    <div class="card-body">
+        <form method="post" enctype="multipart/form-data" class="row g-3">
+            {% csrf_token %}
+            
+            <div class="col-md-6">
+                {{ form.nome|as_crispy_field }}
+            </div>
+            
+            <div class="col-md-6">
+                {{ form.codigo_referencia|as_crispy_field }}
+            </div>
+            
+            <div class="col-12">
+                {{ form.descricao|as_crispy_field }}
+            </div>
+            
+            <div class="col-md-6">
+                {{ form.categoria|as_crispy_field }}
+            </div>
+            
+            <div class="col-md-3">
+                {{ form.preco_unitario|as_crispy_field }}
+            </div>
+            
+            <div class="col-md-3">
+                {{ form.quantidade_em_estoque|as_crispy_field }}
+            </div>
+            
+            <div class="col-md-3">
+                {{ form.estoque_minimo|as_crispy_field }}
+            </div>
+            
+            <div class="col-md-3">
+                {{ form.localizacao|as_crispy_field }}
+            </div>
+            
+            <div class="col-md-6">
+                {{ form.fornecedor|as_crispy_field }}
+            </div>
+            
+            <div class="col-md-3">
+                {{ form.data_ultima_compra|as_crispy_field }}
+            </div>
+            
+            <div class="col-md-3">
+                {{ form.prazo_entrega|as_crispy_field }}
+            </div>
+            
+            <div class="col-12">
+                {{ form.imagem|as_crispy_field }}
+            </div>
+            
+            <div class="col-12">
+                <button type="submit" class="btn btn-primary">Salvar</button>
+                <a href="{% if form.instance.pk %}{% url 'detalhe_produto' form.instance.pk %}{% else %}{% url 'lista_produtos' %}{% endif %}" class="btn btn-secondary">Voltar</a>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

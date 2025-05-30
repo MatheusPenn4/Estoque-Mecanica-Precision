@@ -1,0 +1,89 @@
+{% extends 'base.html' %}
+
+{% block title %}Movimentações - Controle de Estoque{% endblock %}
+{% block page_title %}Movimentações de Estoque{% endblock %}
+
+{% block content %}
+<div class="content-header d-flex justify-content-between align-items-center">
+    <div>
+        <h1>Histórico de Movimentações</h1>
+        <p class="text-muted">Entradas e saídas de produtos do estoque</p>
+    </div>
+    <div>
+        <a href="{% url 'entrada_estoque' %}" class="btn btn-success me-2">
+            <i class="fas fa-arrow-down me-2"></i>Nova Entrada
+        </a>
+        <a href="{% url 'saida_estoque' %}" class="btn btn-danger">
+            <i class="fas fa-arrow-up me-2"></i>Nova Saída
+        </a>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-header">
+        <form method="get" class="row g-3">
+            <div class="col-md-4">
+                <select name="tipo" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todos os tipos</option>
+                    <option value="entrada" {% if tipo == 'entrada' %}selected{% endif %}>Entradas</option>
+                    <option value="saida" {% if tipo == 'saida' %}selected{% endif %}>Saídas</option>
+                </select>
+            </div>
+            <div class="col-md-4">
+                <select name="produto" class="form-select" onchange="this.form.submit()">
+                    <option value="">Todos os produtos</option>
+                    {% for produto in produtos %}
+                        <option value="{{ produto.id }}" {% if produto_id == produto.id %}selected{% endif %}>
+                            {{ produto.nome }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </form>
+    </div>
+    <div class="card-body">
+        <div class="table-responsive">
+            <table class="table table-hover">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Produto</th>
+                        <th>Tipo</th>
+                        <th>Quantidade</th>
+                        <th>Data/Hora</th>
+                        <th>Responsável</th>
+                        <th>Observação</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for movimentacao in movimentacoes %}
+                    <tr>
+                        <td>{{ movimentacao.id }}</td>
+                        <td>
+                            <a href="{% url 'detalhe_produto' movimentacao.produto.id %}">
+                                {{ movimentacao.produto.nome }}
+                            </a>
+                        </td>
+                        <td>
+                            {% if movimentacao.tipo == 'entrada' %}
+                                <span class="badge bg-success">Entrada</span>
+                            {% else %}
+                                <span class="badge bg-danger">Saída</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ movimentacao.quantidade }}</td>
+                        <td>{{ movimentacao.data|date:"d/m/Y H:i" }}</td>
+                        <td>{{ movimentacao.responsavel.username }}</td>
+                        <td>{{ movimentacao.observacao|default:"-"|truncatechars:30 }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="7" class="text-center">Nenhuma movimentação encontrada</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
